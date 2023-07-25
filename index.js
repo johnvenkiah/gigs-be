@@ -1,6 +1,8 @@
+const path = require('path');
 const express = require('express');
 const { google } = require('googleapis');
 const cors = require('cors');
+const transporter = require('./config');
 require('dotenv').config();
 
 const app = express();
@@ -10,15 +12,18 @@ const GOOGLE_PRIVATE_KEY = process.env.PRIVATE_KEY.replace(/\\n/g, '\n');
 const GOOGLE_CLIENT_EMAIL = process.env.CLIENT_EMAIL;
 const GOOGLE_PROJECT_NUMBER = process.env.PROJECT_NUMBER;
 const GOOGLE_CALENDAR_ID = process.env.CALENDAR_ID;
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3030;
 
 var corsOptions = {
-  // origin: 'https://www.faela-band.com',
-  origin: 'http://localhost:3002',
+  origin: 'https://johnvenkiah.com',
   optionsSuccessStatus: 200,
 };
 
-app.get('/events', cors(corsOptions), async (req, res) => {
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'build')));
+app.use(cors(corsOptions));
+
+app.get('/events', async (req, res) => {
   try {
     const jwtClient = new google.auth.JWT(
       GOOGLE_CLIENT_EMAIL,
@@ -46,4 +51,43 @@ app.get('/events', cors(corsOptions), async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`App listening on port ${PORT}!`));
+app.post('/send', (req, res) => {
+  try {
+    const mailOptions = {
+      from: req.body.email, // sender address
+      to: process.env.EMAIL, // list of receivers
+      subject: `johnvenkiah.com - ${req.body.subject}`, // Subject line
+      html: `
+      <h3>Contact Request From ${req.body.name}</h3>
+      <p><strong>From: </strong>${req.body.name} | ${req.body.email}</p>
+      <p><strong>Subject: </strong>johnvenkiah.com - ${req.body.subject}</li>
+      <h4>Message:</h4>
+      <p>${req.body.message}</p>
+      `,
+    };
+
+    transporter.sendMail(mailOptions, function (err, info) {
+      if (err) {
+        console.log(err);
+        res.status(500).send({
+          success: false,
+          message: 'Something went wrong. Try again later',
+        });
+      } else {
+        res.send({
+          success: true,
+          message: "Thanks for writing, I'll get back to you soon!",
+        });
+      }
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error,
+    });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`App listening on port ${PORT}!`);
+});
