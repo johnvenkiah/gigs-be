@@ -16,6 +16,7 @@ const PORT = process.env.PORT || 3030;
 
 var corsOptions = {
   origin: 'https://johnvenkiah.com',
+  // origin: 'http://localhost:3000',
   optionsSuccessStatus: 200,
 };
 
@@ -41,6 +42,7 @@ app.get('/events', async (req, res) => {
       calendarId: GOOGLE_CALENDAR_ID,
       timeMin: new Date().toISOString(),
       maxResults: 10,
+      fields: 'items(id,summary,description,location,start/dateTime)',
       singleEvents: true,
       orderBy: 'startTime',
     });
