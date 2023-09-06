@@ -42,7 +42,7 @@ app.get('/events', async (req, res) => {
       calendarId: GOOGLE_CALENDAR_ID,
       timeMin: new Date().toISOString(),
       maxResults: 10,
-      // fields: 'items(id,summary,description,location,start/dateTime)',
+      fields: 'items(id,summary,description,location,start/dateTime)',
       singleEvents: true,
       orderBy: 'startTime',
     });
